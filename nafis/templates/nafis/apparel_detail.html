@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+    <section class="product-detail section-padding">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-6 col-12">
+                    <div class="product-thumb">
+                        {% if apparel.main_image %}
+                            <img src="{{ apparel.main_image.url }}" class="img-fluid product-image" alt="{{ apparel.name }}">
+                        {% else %}
+                            <div class="bg-light d-flex align-items-center justify-content-center" style="height: 400px;">
+                                <span class="text-muted">بدون تصویر</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="col-lg-6 col-12">
+                    <div class="product-info d-flex">
+                        <div>
+                            <h4 class="product-title mb-0">{{ apparel.name }}</h4>
+                            <p class="product-p"><strong>کد محصول:</strong> {{ apparel.code }}</p>
+                        </div>
+                    </div>
+
+                    <div class="product-description">
+                        <strong class="d-block mt-4 mb-2">مشخصات محصول:</strong>
+                        <ul class="list-unstyled">
+                            <li><strong>جنسیت:</strong> {{ apparel.gender.name }}</li>
+                            {% if apparel.kids_gender %}
+                                <li><strong>نوع بچگانه:</strong> {{ apparel.kids_gender.name }}</li>
+                            {% endif %}
+                            <li><strong>نوع محصول:</strong> {{ apparel.product_type.name }}</li>
+                            <li><strong>سبک:</strong> {{ apparel.style.name }}</li>
+                            <li><strong>رنگ:</strong> {{ apparel.color.name }}</li>
+                            {% if apparel.material %}
+                                <li><strong>جنس:</strong> {{ apparel.material.name }}</li>
+                            {% endif %}
+                        </ul>
+                        
+                        {% if apparel.attributes.all %}
+                            <strong class="d-block mt-4 mb-2">ویژگی‌های اضافی:</strong>
+                            <ul class="list-unstyled">
+                                {% for attribute in apparel.attributes.all %}
+                                    <li>{{ attribute.attribute_type.name }}: {{ attribute.value }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                        
+                        <strong class="d-block mt-4 mb-2">توضیحات:</strong>
+                        <p class="lead mb-5">{{ apparel.description|default:"بدون توضیحات" }}</p>
+                    </div>
+
+                    <!-- قیمت -->
+                    <div class="price-section mb-4">
+                        {% if apparel.has_discount %}
+                            <h6 class="product-price text-muted text-decoration-line-through">
+                                قیمت: {{ apparel.price|floatformat:0 }} تومان
+                            </h6>
+                            <h5 class="product-price text-success">
+                                قیمت با تخفیف: {{ apparel.get_discounted_price|floatformat:0 }} تومان
+                            </h5>
+                        {% else %}
+                            <h5 class="product-price text-primary">
+                                قیمت: {{ apparel.price|floatformat:0 }} تومان
+                            </h5>
+                        {% endif %}
+                    </div>
+
+                    <!-- فرم افزودن به سبد -->
+                    <form method="POST" action="{% url 'nafis:add_to_cart' apparel.id %}">
+                        {% csrf_token %}
+                        <div class="product-cart-thumb row">
+                            <!-- انتخاب تعداد -->
+                            <div class="col-lg-6 col-12 mb-3">
+                                <label for="quantity" class="form-label">تعداد</label>
+                                <select class="form-select" name="quantity" id="quantity" required>
+                                    <option value="">انتخاب تعداد</option>
+                                    {% for i in "12345" %}
+                                        <option value="{{ forloop.counter }}">{{ forloop.counter }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- انتخاب سایز -->
+                            <div class="col-lg-6 col-12 mb-3">
+                                <label for="size" class="form-label">سایز</label>
+                                <select class="form-select" name="size" id="size" required>
+                                    <option value="">انتخاب سایز</option>
+                                    {% for size in available_sizes %}
+                                        <option value="{{ size.id }}">{{ size.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- انتخاب رنگ -->
+                            <div class="col-lg-6 col-12 mb-3">
+                                <label for="color" class="form-label">رنگ</label>
+                                <select class="form-select" name="color" id="color" required>
+                                    <option value="">انتخاب رنگ</option>
+                                    {% for color in available_colors %}
+                                        <option value="{{ color.id }}">{{ color.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- دکمه افزودن به سبد -->
+                            <div class="col-12 mt-3">
+                                {% if inventory_info %}
+                                    <button type="submit" class="btn btn-primary btn-lg">افزودن به سبد خرید</button>
+                                {% else %}
+                                    <button type="button" class="btn btn-secondary btn-lg" disabled>ناموجود</button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </form>
+
+                    <p class="mt-3">
+                        <a href="#" class="product-additional-link">جزئیات!</a>
+                        <a href="#" class="product-additional-link">تحویل و پرداخت!</a>
+                    </p>
+                </div>
+            </div>
+
+            <!-- تصاویر بیشتر -->
+            {% if apparel_images %}
+                <div class="row mt-5">
+                    <div class="col-12">
+                        <h3 class="mb-4">تصاویر بیشتر در مورد محصول</h3>
+                    </div>
+                    {% for image in apparel_images %}
+                        <div class="col-lg-4 col-12 mb-3">
+                            <img src="{{ image.image.url }}" class="img-fluid" alt="{{ image.alt_text|default:apparel.name }}">
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- محصولات مشابه -->
+    {% if related_apparels %}
+        <section class="related-product section-padding border-top">
+            <div class="container">
+                <div class="row">
+                    <div class="col-12">
+                        <h3 class="mb-5">محصولات مشابه</h3>
+                    </div>
+
+                    {% for related_apparel in related_apparels %}
+                        <div class="col-lg-4 col-12 mb-3">
+                            <div class="product-thumb">
+                                <a href="{% url 'nafis:apparel_detail' related_apparel.slug %}">
+                                    {% if related_apparel.main_image %}
+                                        <img src="{{ related_apparel.main_image.url }}" class="img-fluid product-image" alt="{{ related_apparel.name }}">
+                                    {% else %}
+                                        <div class="bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                            <span class="text-muted">بدون تصویر</span>
+                                        </div>
+                                    {% endif %}
+                                </a>
+
+                                <div class="product-info d-flex">
+                                    <div>
+                                        <h5 class="product-title mb-0">
+                                            <a href="{% url 'nafis:apparel_detail' related_apparel.slug %}" class="product-title-link">{{ related_apparel.name }}</a>
+                                        </h5>
+                                        <p class="product-p">{{ related_apparel.product_type.name }} - {{ related_apparel.color.name }}</p>
+                                    </div>
+                                    <div class="ms-auto">
+                                        {% if related_apparel.has_discount %}
+                                            <small class="product-price text-muted text-decoration-line-through d-block">{{ related_apparel.price|floatformat:0 }} تومان</small>
+                                            <small class="product-price text-success">{{ related_apparel.get_discounted_price|floatformat:0 }} تومان</small>
+                                        {% else %}
+                                            <small class="product-price text-muted">{{ related_apparel.price|floatformat:0 }} تومان</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+    {% endif %}
+{% endblock content %}

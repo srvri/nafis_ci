@@ -1,0 +1,108 @@
+/* static/css/pages.css */
+
+/*---------------------------------------
+  SITE HEADER (FOR INNER PAGES)
+-----------------------------------------*/
+.site-header {
+  background-color: var(--section-bg-color);
+  position: relative;
+  overflow: hidden;
+  margin-top: 86px;
+}
+
+.site-header.section-padding {
+  padding-top: 7rem;
+  padding-bottom: 7rem;
+}
+
+.header-image {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 50%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/*---------------------------------------
+  ABOUT PAGE
+-----------------------------------------*/
+.about .nav-pills .nav-item {
+  width: 100%;
+}
+
+.about .nav-pills .nav-link {
+  color: var(--grey-color);
+  font-size: 18px;
+  font-weight: var(--font-weight-bold);
+  border-left: 1px solid var(--grey-color);
+  border-radius: 0;
+  padding-right: 0;
+}
+
+.about .nav-pills .nav-link:hover,
+.about .nav-pills .nav-link.active,
+.about .nav-pills .show>.nav-link {
+  background: transparent;
+  border-left-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+/*---------------------------------------
+  FAQ ACCORDION
+-----------------------------------------*/
+.accordion-item {
+  background-color: transparent;
+  border: none;
+  border-bottom: 1px solid var(--grey-color);
+}
+
+.accordion-button {
+  background-color: transparent;
+  box-shadow: none;
+  font-size: 1.5rem;
+  font-weight: var(--font-weight-normal);
+  padding: 1.5rem 0;
+}
+
+.accordion-button:not(.collapsed) {
+  background: transparent;
+  box-shadow: none;
+  color: var(--primary-color); /* Highlight active accordion */
+}
+
+.accordion-button:focus {
+    border-color: transparent;
+    box-shadow: none;
+}
+
+.accordion-body {
+  padding: 2rem 0;
+}
+
+/*---------------------------------------
+  TEAM MEMBERS
+-----------------------------------------*/
+.team {
+  background: var(--grey-color);
+}
+
+.team-thumb {
+  background: var(--white-color);
+  position: relative;
+  border-radius: .25rem;
+  padding: 42px 32px;
+}
+
+.team-info {
+  width: 100%;
+}
+
+/*---------------------------------------
+  CONTACT INFO BOX
+-----------------------------------------*/
+.contact-info {
+  background: var(--section-bg-color); /* Added background */
+  padding: 40px;
+  height: 100%; /* Ensure it fills the column height */
+}

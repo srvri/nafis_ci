@@ -1,0 +1,170 @@
+{% load static %}
+
+{% block content %}
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: {
+                    "primary": "#17cf54",
+                    "background-light": "#f6f8f6",
+                    "background-dark": "#112116",
+                    "orange-accent": "#ff9f1c",
+                },
+                fontFamily: { "display": ["Vazirmatn", "sans-serif"] },
+            },
+        },
+    }
+</script>
+<style>
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    body { font-family: 'Vazirmatn', 'Vazir', sans-serif; direction: rtl; text-align: right; }
+</style>
+
+<div class="relative flex h-auto min-h-screen w-full flex-col bg-background-light dark:bg-background-dark font-display">
+    <div class="layout-container flex h-full grow flex-row">
+        
+        <!-- Sidebar (Hidden on mobile) -->
+        <aside class="hidden lg:flex w-1/4 bg-primary/20 dark:bg-primary/10 p-4">
+            <div class="flex flex-col gap-4 py-5">
+                <div class="flex gap-3 items-center">
+                    <div class="bg-yellow-200 rounded-full flex flex-shrink-0 justify-center items-center text-yellow-500 text-2xl font-mono size-12">
+                        {{ user.username|first|upper }}
+                    </div>
+                    <div class="flex flex-col">
+                        {% if user_profile.first_name or user_profile.last_name %}
+                            <h1 class="text-gray-900 dark:text-white text-base font-bold leading-normal">{{ user_profile.first_name }} {{ user_profile.last_name }}</h1>
+                            <p class="text-gray-600 dark:text-gray-400 text-sm font-normal leading-normal">{{ user_profile.phone_number|default:'شماره تلفن ثبت نشده' }}</p>
+                        {% else %}
+                            <h1 class="text-gray-900 dark:text-white text-base font-bold leading-normal">{{ user.username }}</h1>
+                            <p class="text-gray-600 dark:text-gray-400 text-sm font-normal leading-normal">{{ user_profile.phone_number|default:'شماره تلفن ثبت نشده' }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="flex flex-col gap-2 mt-8">
+                    <a class="flex items-center gap-3 px-3 py-2 text-gray-900 dark:text-white rounded-lg hover:bg-primary/30" href="{% url 'accounts:profile' %}">
+                        <span class="material-symbols-outlined">person</span>
+                        <p class="text-sm font-medium leading-normal">حساب کاربری</p>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2 text-gray-900 dark:text-white rounded-lg hover:bg-primary/30" href="#">
+                        <span class="material-symbols-outlined">notifications</span>
+                        <p class="text-sm font-medium leading-normal">اعلان‌ها</p>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2 text-gray-900 dark:text-white rounded-lg hover:bg-primary/30" href="{% url 'accounts:change_password' %}">
+                        <span class="material-symbols-outlined">lock</span>
+                        <p class="text-sm font-medium leading-normal">تغییر رمز عبور</p>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2 text-gray-900 dark:text-white rounded-lg hover:bg-primary/30" href="{% url 'accounts:support' %}">
+                        <span class="material-symbols-outlined">mail</span>
+                        <p class="text-sm font-medium leading-normal">پشتیبانی</p>
+                    </a>
+                    <!-- Active Link -->
+                    <a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-orange-accent text-white" href="{% url 'accounts:addresses' %}">
+                        <span class="material-symbols-outlined">location_on</span>
+                        <p class="text-sm font-medium leading-normal">آدرس‌ها</p>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2 text-gray-900 dark:text-white rounded-lg hover:bg-primary/30" href="{% url 'accounts:orders' %}">
+                        <span class="material-symbols-outlined">shopping_basket</span>
+                        <p class="text-sm font-medium leading-normal">تمام سفارشات</p>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2 text-gray-900 dark:text-white rounded-lg hover:bg-primary/30" href="{% url 'accounts:wishlist' %}">
+                        <span class="material-symbols-outlined">favorite</span>
+                        <p class="text-sm font-medium leading-normal">لیست علاقه‌مندی‌ها</p>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2 text-gray-900 dark:text-white rounded-lg hover:bg-primary/30 mt-8" href="{% url 'accounts:logout' %}">
+                        <span class="material-symbols-outlined">logout</span>
+                        <p class="text-sm font-medium leading-normal">خروج</p>
+                    </a>
+                </div>
+            </div>
+        </aside>
+
+        <main class="w-full lg:flex-1 px-6 lg:px-10 py-5">
+            <div class="layout-content-container flex flex-col max-w-4xl mx-auto">
+                <div class="flex flex-wrap justify-between gap-3 p-4">
+                    <h1 class="text-gray-900 dark:text-white text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em]">آدرس‌ها</h1>
+                </div>
+
+                <!-- Accordion Menu for Mobile -->
+                <div id="mobile-menu-container" class="lg:hidden w-full px-4 mb-6">
+                    <button id="accordion-button" class="w-full flex justify-between items-center p-4 bg-gray-100 dark:bg-gray-800 rounded-lg shadow">
+                        <span class="font-semibold text-gray-900 dark:text-white">منوی حساب کاربری</span>
+                        <span id="accordion-icon" class="material-symbols-outlined text-gray-900 dark:text-white transition-transform duration-300">expand_more</span>
+                    </button>
+                    <div id="accordion-content" class="max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+                         <div class="flex flex-col gap-2 pt-4">
+                            <a class="flex items-center gap-3 px-3 py-2 text-gray-900 dark:text-white rounded-lg hover:bg-primary/30" href="{% url 'accounts:profile' %}">
+                                <span class="material-symbols-outlined">person</span>
+                                <p class="text-sm font-medium leading-normal">حساب کاربری</p>
+                            </a>
+                            <!-- ... other links ... -->
+                             <a class="flex items-center gap-3 px-3 py-2 text-gray-900 dark:text-white rounded-lg hover:bg-primary/30" href="{% url 'accounts:addresses' %}">
+                                <span class="material-symbols-outlined">location_on</span>
+                                <p class="text-sm font-medium leading-normal">آدرس‌ها</p>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Page Content -->
+                <div class="p-4 space-y-8">
+                    <div class="p-8 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+                        <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-6">افزودن آدرس جدید</h2>
+                        <form method="post" class="space-y-6">
+                            {% csrf_token %}
+                            {% for field in form %}
+                                <label class="flex flex-col">
+                                    <p class="text-gray-900 dark:text-white text-base font-medium leading-normal pb-2">{{ field.label }}</p>
+                                    <!-- NOTE: You may need django-widget-tweaks to add classes to your form fields -->
+                                    {{ field.as_widget.attrs.class }}
+                                    <input type="{{ field.widget_type }}" name="{{ field.name }}" 
+                                           class="form-input flex w-full min-w-0 flex-1 rounded-lg text-gray-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-background-dark h-14 p-3.5"/>
+                                    {% if field.errors %}
+                                        <span class="text-red-500 text-sm mt-1">{{ field.errors.0 }}</span>
+                                    {% endif %}
+                                </label>
+                            {% endfor %}
+                            <button type="submit" class="w-full px-6 py-3 rounded-lg bg-orange-accent text-white font-semibold text-base hover:bg-orange-accent/90">افزودن آدرس</button>
+                        </form>
+                    </div>
+
+                    <div class="mt-8">
+                        <h3 class="text-2xl font-semibold text-gray-900 dark:text-white mb-6">آدرس‌های ثبت‌شده</h3>
+                        {% for address in addresses %}
+                            <div class="mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+                                <p class="font-semibold">{{ address.full_name }} - {{ address.phone_number }}</p>
+                                <p class="text-gray-600 dark:text-gray-400">{{ address.address }}، {{ address.city }}، کد پستی: {{ address.postal_code }}</p>
+                            </div>
+                        {% empty %}
+                            <p class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md text-gray-600 dark:text-gray-400">هنوز آدرسی ثبت نکرده‌اید.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script>
+    // Accordion script remains the same
+    const accordionButton = document.getElementById('accordion-button');
+    const accordionContent = document.getElementById('accordion-content');
+    const accordionIcon = document.getElementById('accordion-icon');
+    accordionButton.addEventListener('click', () => {
+        if (accordionContent.style.maxHeight) {
+            accordionContent.style.maxHeight = null;
+        } else {
+            accordionContent.style.maxHeight = accordionContent.scrollHeight + "px";
+        }
+        accordionIcon.classList.toggle('rotate-180');
+    });
+</script>
+
+<link rel="stylesheet" href="{% static 'css/READYSTYLE2.css' %}">
+{% endblock content %}

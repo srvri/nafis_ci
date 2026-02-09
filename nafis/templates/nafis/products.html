@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+    <section class="products section-padding">
+        <div class="container">
+            <!-- محصولات مردانه -->
+            {% if men_apparels %}
+            <div class="row">
+                <div class="col-12">
+                    <a href="{% url 'nafis:men_products' %}">
+                        <h2 class="mb-5 text-center">محصولات مردانه</h2>
+                    </a>
+                </div>
+                {% for apparel in men_apparels %}
+                    <div class="col-lg-3 col-md-4 col-sm-6 col-12 mb-4">
+                        <div class="product-card-glass">
+                            <a href="{% url 'nafis:apparel_detail' apparel.slug %}">
+                                {% if apparel.main_image %}
+                                    <img src="{{ apparel.main_image.url }}" class="product-image" alt="{{ apparel.name }}">
+                                {% else %}
+                                    <div class="product-image bg-light d-flex align-items-center justify-content-center">
+                                        <span class="text-muted small">بدون تصویر</span>
+                                    </div>
+                                {% endif %}
+                            </a>
+                            
+                            <!-- نشان تخفیف -->
+                            {% if apparel.has_discount %}
+                                <span class="badge bg-danger position-absolute" style="top: 20px; right: 20px; font-size: 0.9rem;">
+                                    تخفیف
+                                </span>
+                            {% endif %}
+
+                            <div class="product-info">
+                                <h5 class="product-title mb-2">
+                                    <a href="{% url 'nafis:apparel_detail' apparel.slug %}" class="product-title-link">{{ apparel.name }}</a>
+                                </h5>
+                                
+                                <div class="product-details mb-2">
+                                    <small class="text-muted d-block">{{ apparel.product_type.name }} - {{ apparel.color.name }}</small>
+                                    <small class="text-muted d-block">سبک: {{ apparel.style.name }}</small>
+                                </div>
+                                
+                                <div class="product-price mt-auto">
+                                    {% if apparel.has_discount %}
+                                        <span class="text-muted text-decoration-line-through me-2">
+                                            {{ apparel.price|floatformat:0 }} تومان
+                                        </span>
+                                        <span class="text-success fw-bold">
+                                            {{ apparel.get_discounted_price|floatformat:0 }} تومان
+                                        </span>
+                                    {% else %}
+                                        <span class="text-primary fw-bold">
+                                            {{ apparel.price|floatformat:0 }} تومان
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- محصولات زنانه -->
+            {% if women_apparels %}
+            <div class="row mt-5">
+                <div class="col-12">
+                    <a href="{% url 'nafis:women_products' %}">
+                        <h2 class="mb-5 text-center">محصولات زنانه</h2>
+                    </a>
+                </div>
+                {% for apparel in women_apparels %}
+                    <div class="col-lg-3 col-md-4 col-sm-6 col-12 mb-4">
+                        <div class="product-card-glass">
+                            <a href="{% url 'nafis:apparel_detail' apparel.slug %}">
+                                {% if apparel.main_image %}
+                                    <img src="{{ apparel.main_image.url }}" class="product-image" alt="{{ apparel.name }}">
+                                {% else %}
+                                    <div class="product-image bg-light d-flex align-items-center justify-content-center">
+                                        <span class="text-muted small">بدون تصویر</span>
+                                    </div>
+                                {% endif %}
+                            </a>
+                            
+                            <!-- نشان تخفیف -->
+                            {% if apparel.has_discount %}
+                                <span class="badge bg-danger position-absolute" style="top: 20px; right: 20px; font-size: 0.9rem;">
+                                    تخفیف
+                                </span>
+                            {% endif %}
+
+                            <div class="product-info">
+                                <h5 class="product-title mb-2">
+                                    <a href="{% url 'nafis:apparel_detail' apparel.slug %}" class="product-title-link">{{ apparel.name }}</a>
+                                </h5>
+                                
+                                <div class="product-details mb-2">
+                                    <small class="text-muted d-block">{{ apparel.product_type.name }} - {{ apparel.color.name }}</small>
+                                    <small class="text-muted d-block">سبک: {{ apparel.style.name }}</small>
+                                </div>
+                                
+                                <div class="product-price mt-auto">
+                                    {% if apparel.has_discount %}
+                                        <span class="text-muted text-decoration-line-through me-2">
+                                            {{ apparel.price|floatformat:0 }} تومان
+                                        </span>
+                                        <span class="text-success fw-bold">
+                                            {{ apparel.get_discounted_price|floatformat:0 }} تومان
+                                        </span>
+                                    {% else %}
+                                        <span class="text-primary fw-bold">
+                                            {{ apparel.price|floatformat:0 }} تومان
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- محصولات بچگانه -->
+            {% if kids_apparels %}
+            <div class="row mt-5">
+                <div class="col-12">
+                    <a href="{% url 'nafis:kids_products' %}">
+                        <h2 class="mb-5 text-center">محصولات بچگانه</h2>
+                    </a>
+                </div>
+                {% for apparel in kids_apparels %}
+                    <div class="col-lg-3 col-md-4 col-sm-6 col-12 mb-4">
+                        <div class="product-card-glass">
+                            <a href="{% url 'nafis:apparel_detail' apparel.slug %}">
+                                {% if apparel.main_image %}
+                                    <img src="{{ apparel.main_image.url }}" class="product-image" alt="{{ apparel.name }}">
+                                {% else %}
+                                    <div class="product-image bg-light d-flex align-items-center justify-content-center">
+                                        <span class="text-muted small">بدون تصویر</span>
+                                    </div>
+                                {% endif %}
+                            </a>
+                            
+                            <!-- نشان تخفیف -->
+                            {% if apparel.has_discount %}
+                                <span class="badge bg-danger position-absolute" style="top: 20px; right: 20px; font-size: 0.9rem;">
+                                    تخفیف
+                                </span>
+                            {% endif %}
+
+                            <div class="product-info">
+                                <h5 class="product-title mb-2">
+                                    <a href="{% url 'nafis:apparel_detail' apparel.slug %}" class="product-title-link">{{ apparel.name }}</a>
+                                </h5>
+                                
+                                <div class="product-details mb-2">
+                                    <small class="text-muted d-block">{{ apparel.product_type.name }} - {{ apparel.color.name }}</small>
+                                    {% if apparel.kids_gender %}
+                                        <small class="text-muted d-block">{{ apparel.get_kids_gender_display }}</small>
+                                    {% endif %}
+                                    <small class="text-muted d-block">سبک: {{ apparel.style.name }}</small>
+                                </div>
+                                
+                                <div class="product-price mt-auto">
+                                    {% if apparel.has_discount %}
+                                        <span class="text-muted text-decoration-line-through me-2">
+                                            {{ apparel.price|floatformat:0 }} تومان
+                                        </span>
+                                        <span class="text-success fw-bold">
+                                            {{ apparel.get_discounted_price|floatformat:0 }} تومان
+                                        </span>
+                                    {% else %}
+                                        <span class="text-primary fw-bold">
+                                            {{ apparel.price|floatformat:0 }} تومان
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- اگر هیچ محصولی نباشد -->
+            {% if not men_apparels and not women_apparels and not kids_apparels %}
+            <div class="row">
+                <div class="col-12">
+                    <div class="alert alert-info text-center">
+                        <h4>محصولی یافت نشد</h4>
+                        <p>در حال حاضر محصولی موجود نیست. لطفاً بعداً مراجعه کنید.</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+{% endblock content %}

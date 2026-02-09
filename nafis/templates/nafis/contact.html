@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<section class="contact section-padding">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6 col-12">
+                <h2 class="mb-4">گوش شنوا :  </h2>
+
+                <form class="contact-form me-lg-5 pe-lg-3" method="POST" action="{% url 'nafis:contact' %}">
+                    {% csrf_token %}
+
+
+                    {% if messages %}
+                        <ul class="messages">
+                            {% for message in messages %}
+                                <h8 class="{{ message.tags }}"></h8>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+
+                    <!-- ورودی‌های فرم -->
+                    <div class="form-floating mb-3">
+                        {{ form.name.label_tag }}
+                        {{ form.name }}
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        {{ form.email.label_tag }}
+                        {{ form.email }}
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        {{ form.subject.label_tag }}
+                        {{ form.subject }}
+                    </div>
+
+                    <div class="form-floating mb-4">
+                        {{ form.message.label_tag }}
+                        {{ form.message }}
+                    </div>
+
+                    <!-- دکمه ارسال -->
+                    <div class="col-lg-5 col-6">
+                        <button type="submit" class="form-control btn btn-primary">ارسال</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="col-lg-6 col-12 mt-5 ms-auto">
+                <div class="row">
+                    <div class="col-6 border-end contact-info">
+                        <h6 class="mb-3">شماره تلفن جهت ارتباط با ما </h6>
+
+                        <a href="" class="custom-link">
+                            09936224855
+                            <i class="bi-arrow-right ms-2"></i>
+                        </a>
+                    </div>
+
+                    <div class="col-6 contact-info">
+                        <h6 class="mb-3"> ایمیل : </h6>
+
+                        <a href="" class="custom-link">
+                            mo.srvri@gmail.com
+                            <i class="bi-arrow-right ms-2"></i>
+                        </a>
+                    </div>
+
+                    <div class="col-6 border-top border-end contact-info">
+                        <h6 class="mb-3">تولیدی ما </h6>
+
+                        <p class="text-muted">سلماس، میدان قائم، روبه روی مدرسه اما خمینی (ره)، ساختمان ROSE</p>
+                    </div>
+
+                    <div class="col-6 border-top contact-info">
+                        <h6 class="mb-3">مارا در فجازی دنبال کنید</h6>
+
+                        <ul class="social-icon">
+                            <li><a href="#" class="social-icon-link bi-messenger"></a></li>
+                            <li><a href="#" class="social-icon-link bi-youtube"></a></li>
+                            <li><a href="#" class="social-icon-link bi-instagram"></a></li>
+                            <li><a href="#" class="social-icon-link bi-whatsapp"></a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}

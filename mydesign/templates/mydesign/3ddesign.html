@@ -1,0 +1,996 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>UV + 3D Designer (Stage 3)</title>
+
+  <link rel="stylesheet" href="{% static 'mydesign/css/3ddesign.css' %}">
+</head>
+
+<body>
+
+<div class="layout">
+
+  <!-- TOP BAR (inside grid) -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <a href="{% url 'mydesign:my_designs_page' %}" style="text-decoration: none; color: #666; font-size: 14px;">← طرح‌های من</a>
+    </div>
+    <div class="topbar-center">
+      <h1 style="margin:0; font-size:16px; font-weight:700;">محرر طراحی</h1>
+    </div>
+    <div class="topbar-right">
+      <button class="btn-secondary" id="exportBtn">Export dieline</button>
+      <button class="btn-primary" id="saveTopBtn">Save</button>
+    </div>
+  </header>
+
+
+  <!-- LEFT: 3D Viewer -->
+  <section class="viewer-panel">
+    <div id="threeWrap" style="width:100%; height:100%;"></div>
+    <!-- Model & Background Color Controls -->
+    <div id="colorControls" style="width:100%; display:flex; flex-direction:column; align-items:center; gap:10px; margin-top:10px;">
+      <!-- Model Color Picker -->
+      <div style="display:flex; align-items:center; gap:8px; font-size:13px;">
+        <span>رنگ لباس:</span>
+        <input type="color" id="modelColorPicker" value="#f4f4f7" style="width:28px; height:28px; border:none; background:none; cursor:pointer;">
+      </div>
+      <!-- Background Color Swatches -->
+      <div style="display:flex; align-items:center; gap:8px; font-size:13px;">
+        <span>پس‌زمینه:</span>
+        <div id="bgSwatches" style="display:flex; gap:4px;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MIDDLE: UV Editor -->
+  <main class="uv-panel">
+    <div class="uvStage" id="uvStage">
+      <img id="uvImg" src="{% static 'uv/tshirt_uv.png' %}" alt="UV Map">
+      <canvas id="uvCanvas"></canvas>
+    </div>
+  </main>
+
+  <!-- RIGHT: Upload + Controls -->
+  <aside class="control-panel">
+    
+    <!-- Upload Section -->
+    <div style="margin-bottom:16px;">
+      <div class="title">Add Design</div>
+      <input type="file" id="fileInput" accept="image/*" style="display:none;">
+      <button class="btn" id="uploadBtn">افزودن تصویر</button>
+      <div class="list" id="uploadedImagesList"></div>
+    </div>
+
+    <!-- Controls Section -->
+    <div style="margin-bottom:16px;">
+      <div class="title">Position & Scale</div>
+
+      <div class="grid2">
+        <div>
+          <label for="posX">X</label>
+          <input id="posX" type="number" step="0.01" value="0">
+        </div>
+        <div>
+          <label for="posY">Y</label>
+          <input id="posY" type="number" step="0.01" value="0">
+        </div>
+      </div>
+
+      <div style="margin-top:12px;">
+        <label for="scale">Scale</label>
+        <input id="scale" type="range" min="0.1" max="2" step="0.01" value="1">
+        <div class="smallCenter"><span id="scaleValue">1.00</span></div>
+      </div>
+
+      <div style="margin-top:12px;">
+        <label for="rotation">Rotation (deg)</label>
+        <input id="rotation" type="number" step="1" value="0">
+      </div>
+    </div>
+
+    <!-- Reset Button -->
+    <button class="btn" id="resetBtn">Reset</button>
+
+  </aside>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.164.1/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.164.1/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+  import * as THREE from 'three';
+  import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+  import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+  import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+  // ===== DOM =====
+  const threeWrap = document.getElementById('threeWrap');
+
+  const uploadBtn = document.getElementById('uploadBtn');
+  const fileInput = document.getElementById('fileInput');
+  const uploadedImagesList = document.getElementById('uploadedImagesList');
+
+  const uvStage = document.getElementById('uvStage');
+  const uvImg = document.getElementById('uvImg');
+  const uvCanvas = document.getElementById('uvCanvas');
+  const uvCtx = uvCanvas.getContext('2d');
+
+  const posX = document.getElementById('posX');
+  const posY = document.getElementById('posY');
+  const scale = document.getElementById('scale');
+  const scaleValue = document.getElementById('scaleValue');
+  const rotation = document.getElementById('rotation');
+  const resetBtn = document.getElementById('resetBtn');
+  const saveBtn = document.getElementById('saveTopBtn');
+  const exportBtn = document.getElementById('exportBtn');
+
+  // ===== Stage 5: Multi-Item Design State =====
+  // designState: Single source of truth
+  // items[]: Array of design items (layers)
+  // activeItemId: ID of currently selected item (or null)
+  const designState = {
+    items: [],
+    activeItemId: null,
+    designId: null  // Stage 5.2: Design ID for edit mode
+  };
+
+  // Stage 5.2: Extract design_id from URL or context
+  function getDesignIdFromContext() {
+    // Check if design_id is passed in Django context
+    const designIdElement = document.querySelector('script[type="application/json"][data-design-id]');
+    if (designIdElement) {
+      return designIdElement.dataset.designId;
+    }
+    
+    // Check URL: /mydesign/edit/<design_id>/
+    const editMatch = window.location.pathname.match(/\/mydesign\/edit\/(\d+)\//);
+    if (editMatch) {
+      return editMatch[1];
+    }
+    
+    return null;
+  }
+
+  designState.designId = getDesignIdFromContext();
+
+  // Stage 5.2: Load saved design and rebuild state
+  async function loadSavedDesign() {
+    if (!designState.designId) return; // Not in edit mode
+    
+    try {
+      const response = await fetch(`/mydesign/api/design/${designState.designId}/`);
+      if (!response.ok) {
+        console.error('Design not found:', response.status);
+        return;
+      }
+      
+      const data = await response.json();
+      if (!data.ok || !data.design || !data.design.design_data) {
+        console.error('Invalid design data');
+        return;
+      }
+      
+      const designData = data.design.design_data;
+      
+      // Clear existing items
+      designState.items = [];
+      designState.activeItemId = null;
+      
+      // Rebuild items from saved design_data
+      if (Array.isArray(designData.items) && designData.items.length > 0) {
+        // Load images asynchronously
+        const itemPromises = designData.items.map(savedItem => 
+          new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => {
+              const newItem = {
+                id: savedItem.id,
+                image: img,
+                src: savedItem.src,
+                x: savedItem.x || 0,
+                y: savedItem.y || 0,
+                scale: savedItem.scale || 1,
+                rotation: savedItem.rotation || 0,
+                opacity: savedItem.opacity !== undefined ? savedItem.opacity : 1,
+                zIndex: savedItem.zIndex || 0
+              };
+              resolve(newItem);
+            };
+            img.onerror = () => {
+              console.error('Failed to load image:', savedItem.src);
+              // Still create item even if image failed to load
+              const newItem = {
+                id: savedItem.id,
+                image: null,
+                src: savedItem.src,
+                x: savedItem.x || 0,
+                y: savedItem.y || 0,
+                scale: savedItem.scale || 1,
+                rotation: savedItem.rotation || 0,
+                opacity: savedItem.opacity !== undefined ? savedItem.opacity : 1,
+                zIndex: savedItem.zIndex || 0
+              };
+              resolve(newItem);
+            };
+            img.src = savedItem.src;
+          })
+        );
+        
+        const loadedItems = await Promise.all(itemPromises);
+        designState.items = loadedItems;
+        
+        // Set active item to first item if available
+        if (loadedItems.length > 0) {
+          designState.activeItemId = loadedItems[0].id;
+        }
+      }
+      
+      // Update canvas area from saved data
+      if (designData.canvasArea) {
+        Object.assign(designState, {
+          canvasArea: designData.canvasArea
+        });
+      }
+      
+      // Re-render UI
+      renderLayersPanel();
+      renderAll();
+      
+      console.log('Design loaded successfully:', designState.items.length, 'items');
+    } catch (error) {
+      console.error('Error loading design:', error);
+    }
+  }
+
+  // Helper: Get active item or null
+  function getActiveItem() {
+    return designState.items.find(item => item.id === designState.activeItemId) || null;
+  }
+
+  // Helper: Get item by id
+  function getItemById(id) {
+    return designState.items.find(item => item.id === id) || null;
+  }
+
+  function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
+  // ===== Item Factory =====
+  // Each item is a normalized design element
+  function createItem(src, htmlImage) {
+    return {
+      id: Date.now() + Math.random(), // Unique ID
+      image: htmlImage,
+      src: src,
+      x: 0,              // normalized [-0.5, +0.5]
+      y: 0,
+      scale: 1,          // [0.1, 2]
+      rotation: 0,       // degrees
+      opacity: 1,        // [0, 1]
+      zIndex: designState.items.length // Auto-increment z-order
+    };
+  }
+
+  // ===== Images (Legacy upload list) =====
+  let uploadedImages = [];
+
+  // ===== Texture Canvas (برای اعمال روی مدل 3D) =====
+  // نکته: این canvas UV خطوط ندارد (تا روی لباس چاپ نشود)
+  const TEX_SIZE = 2048; // بعداً 4096 هم می‌تونی بذاری
+  const textureCanvas = document.createElement('canvas');
+  textureCanvas.width = TEX_SIZE;
+  textureCanvas.height = TEX_SIZE;
+  const textureCtx = textureCanvas.getContext('2d', { alpha: true });
+
+  // بک‌گراند سفید پایه (برای سیاه نشدن مدل قبل از طرح)
+  function fillTextureBackground() {
+    textureCtx.clearRect(0, 0, TEX_SIZE, TEX_SIZE);
+    textureCtx.fillStyle = '#ffffff';
+    textureCtx.fillRect(0, 0, TEX_SIZE, TEX_SIZE);
+  }
+  fillTextureBackground();
+
+  const canvasTexture = new THREE.CanvasTexture(textureCanvas);
+  canvasTexture.flipY = false;
+  canvasTexture.colorSpace = THREE.SRGBColorSpace;
+  canvasTexture.wrapS = THREE.ClampToEdgeWrapping;
+  canvasTexture.wrapT = THREE.ClampToEdgeWrapping;
+  canvasTexture.needsUpdate = true;
+
+
+  // ===== Three.js =====
+  let scene, camera, renderer, controls;
+  let modelRoot = null;
+
+  // Store current model color for UI sync
+  let currentModelColor = '#ffffff';
+
+  function applyCanvasTextureToAllMeshes(root, colorHex) {
+    root.traverse((child) => {
+      if (!child.isMesh) return;
+
+      const applyToMat = (m) => {
+        if (!m) return;
+
+        // جلوگیری از سیاهی در متریال‌های PBR
+        if (m.isMeshStandardMaterial || m.isMeshPhysicalMaterial) {
+          m.metalness = 0.0;
+          m.roughness = 0.9;
+          m.envMapIntensity = 1.0;
+          if (m.color && colorHex) m.color.set(colorHex);
+        }
+
+        m.map = canvasTexture;
+        m.needsUpdate = true;
+      };
+
+      if (Array.isArray(child.material)) child.material.forEach(applyToMat);
+      else applyToMat(child.material);
+    });
+  }
+
+  function initThree() {
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xf4f4f7); // default bg
+
+    camera = new THREE.PerspectiveCamera(
+      45,
+      threeWrap.clientWidth / threeWrap.clientHeight,
+      0.1,
+      100
+    );
+    camera.position.set(0, 0.35, 1.9);
+
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(threeWrap.clientWidth, threeWrap.clientHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.1;
+
+    threeWrap.appendChild(renderer.domElement);
+
+    // Environment برای PBR
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+
+    // نورها
+    const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 1.0);
+    hemi.position.set(0, 1, 0);
+    scene.add(hemi);
+
+    const key = new THREE.DirectionalLight(0xffffff, 1.2);
+    key.position.set(2, 2, 3);
+    scene.add(key);
+
+    const fill = new THREE.DirectionalLight(0xffffff, 0.6);
+    fill.position.set(-2, 1, 2);
+    scene.add(fill);
+
+    controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.minDistance = 1;
+    controls.maxDistance = 4;
+    controls.target.set(0, -0.15, 0);
+    controls.update();
+
+    // Load model
+    const loader = new GLTFLoader();
+    const modelPath = "{% static 'models/tshirt.glb' %}";
+
+    loader.load(
+      modelPath,
+      (gltf) => {
+        modelRoot = gltf.scene;
+        modelRoot.position.y = -1.35;
+        scene.add(modelRoot);
+
+        // Set initial model color
+        applyCanvasTextureToAllMeshes(modelRoot, currentModelColor);
+        animate();
+      },
+      undefined,
+      (err) => console.error("خطا در لود مدل:", err)
+    );
+  }
+  // ===== Model & Background Color Controls =====
+  // Model color picker
+  const modelColorPicker = document.getElementById('modelColorPicker');
+  if (modelColorPicker) {
+    modelColorPicker.addEventListener('input', (e) => {
+      const color = e.target.value;
+      currentModelColor = color;
+      if (modelRoot) {
+        applyCanvasTextureToAllMeshes(modelRoot, color);
+      }
+    });
+  }
+
+  // Background color swatches
+  const bgSwatches = document.getElementById('bgSwatches');
+  const bgColors = [
+    { color: '#f4f4f7', label: 'روشن' },
+    { color: '#ffffff', label: 'سفید' },
+    { color: '#e0e0e0', label: 'خاکستری روشن' },
+    { color: '#bdbdbd', label: 'خاکستری' },
+    { color: '#333333', label: 'تیره' },
+    { color: '#000000', label: 'مشکی' },
+    { color: '#f5e9da', label: 'بژ' }
+  ];
+  if (bgSwatches) {
+    bgColors.forEach(({ color, label }) => {
+      const swatch = document.createElement('button');
+      swatch.type = 'button';
+      swatch.title = label;
+      swatch.style.background = color;
+      swatch.style.width = '22px';
+      swatch.style.height = '22px';
+      swatch.style.border = '1px solid #ccc';
+      swatch.style.borderRadius = '50%';
+      swatch.style.cursor = 'pointer';
+      swatch.style.outline = 'none';
+      swatch.style.padding = '0';
+      swatch.style.margin = '0';
+      swatch.addEventListener('click', () => {
+        if (scene) scene.background = new THREE.Color(color);
+        // Visually indicate selected
+        Array.from(bgSwatches.children).forEach(btn => btn.style.boxShadow = '');
+        swatch.style.boxShadow = '0 0 0 2px var(--primary, #6c63ff)';
+      });
+      bgSwatches.appendChild(swatch);
+    });
+    // Set initial selection
+    setTimeout(() => {
+      if (bgSwatches.children.length > 0) {
+        bgSwatches.children[0].click();
+      }
+    }, 200);
+  }
+
+  function animate() {
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
+  }
+
+  function onResize() {
+    camera.aspect = threeWrap.clientWidth / threeWrap.clientHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(threeWrap.clientWidth, threeWrap.clientHeight);
+
+    resizeUvCanvasToStage();
+    renderAll();
+  }
+
+  // ===== UV Canvas sizing (pixel-perfect) =====
+  function resizeUvCanvasToStage() {
+    const rect = uvStage.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+
+    uvCanvas.width = Math.floor(rect.width * dpr);
+    uvCanvas.height = Math.floor(rect.height * dpr);
+    uvCanvas.style.width = rect.width + 'px';
+    uvCanvas.style.height = rect.height + 'px';
+
+    // نقاشی با واحد CSS px
+    uvCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  // ===== Stage 3: Mapping =====
+  // pixel (stage) -> normalized state
+  function pixelToNorm(px, py, stageW, stageH) {
+    const x = (px / stageW) - 0.5;
+    const y = 0.5 - (py / stageH);
+    return { x, y };
+  }
+
+  // normalized state -> pixel (stage)
+  function normToStagePixel(x, y, stageW, stageH) {
+    const px = (x + 0.5) * stageW;
+    const py = (0.5 - y) * stageH;
+    return { px, py };
+  }
+
+  // normalized state -> pixel (texture)
+  function normToTexPixel(x, y) {
+    const tx = (x + 0.5) * TEX_SIZE;
+    const ty = (0.5 - y) * TEX_SIZE;
+    return { tx, ty };
+  }
+
+  // ===== Render (UI UV + Texture for model) =====
+  function renderUvCanvas() {
+    const rect = uvStage.getBoundingClientRect();
+    const w = rect.width;
+    const h = rect.height;
+
+    uvCtx.clearRect(0, 0, w, h);
+
+    // Draw all items sorted by zIndex
+    const sortedItems = [...designState.items].sort((a, b) => a.zIndex - b.zIndex);
+
+    sortedItems.forEach((item, idx) => {
+      const center = normToStagePixel(item.x, item.y, w, h);
+      
+      const baseW = w * 0.25;
+      const ratio = item.image.height / item.image.width;
+      const drawW = baseW * item.scale;
+      const drawH = drawW * ratio;
+      
+      const rad = (item.rotation * Math.PI) / 180;
+
+      uvCtx.save();
+      uvCtx.globalAlpha = item.opacity;
+      uvCtx.translate(center.px, center.py);
+      uvCtx.rotate(rad);
+      uvCtx.drawImage(item.image, -drawW/2, -drawH/2, drawW, drawH);
+      uvCtx.restore();
+    });
+  }
+
+  function renderTextureCanvas() {
+    /**
+     * Critical: Single source of truth for CanvasTexture
+     * Clear -> Sort by zIndex -> Draw all items -> Update THREE.js texture
+     */
+    fillTextureBackground();
+
+    if (designState.items.length === 0) {
+      canvasTexture.needsUpdate = true;
+      return;
+    }
+
+    // Sort by z-order (lowest first = drawn first = appears below)
+    const sortedItems = [...designState.items].sort((a, b) => a.zIndex - b.zIndex);
+
+    sortedItems.forEach((item) => {
+      const { tx, ty } = normToTexPixel(item.x, item.y);
+
+      const baseW = 512; // Base width on texture canvas
+      const ratio = item.image.height / item.image.width;
+      const drawW = baseW * item.scale;
+      const drawH = drawW * ratio;
+
+      const rad = (item.rotation * Math.PI) / 180;
+
+      textureCtx.save();
+      textureCtx.globalAlpha = item.opacity;
+      textureCtx.translate(tx, ty);
+      textureCtx.rotate(rad);
+      textureCtx.drawImage(item.image, -drawW/2, -drawH/2, drawW, drawH);
+      textureCtx.restore();
+    });
+
+    canvasTexture.needsUpdate = true;
+  }
+
+  function renderAll() {
+    renderUvCanvas();
+    renderTextureCanvas();
+  }
+
+  // ===== Controls sync =====
+  function syncUIFromActiveItem() {
+    /**
+     * Update control sliders to reflect active item state
+     * If no active item, disable/zero controls
+     */
+    const active = getActiveItem();
+    
+    if (!active) {
+      posX.value = '0';
+      posY.value = '0';
+      scale.value = '1';
+      scaleValue.textContent = '1.00';
+      rotation.value = '0';
+      posX.disabled = true;
+      posY.disabled = true;
+      scale.disabled = true;
+      rotation.disabled = true;
+      return;
+    }
+
+    posX.disabled = false;
+    posY.disabled = false;
+    scale.disabled = false;
+    rotation.disabled = false;
+
+    posX.value = Number(active.x).toFixed(2);
+    posY.value = Number(active.y).toFixed(2);
+    scale.value = Number(active.scale).toFixed(2);
+    scaleValue.textContent = Number(active.scale).toFixed(2);
+    rotation.value = String(Math.round(active.rotation));
+  }
+
+  function syncActiveItemFromUI() {
+    /**
+     * Update active item state from UI controls
+     * Only affects active item; non-active items are locked
+     */
+    const active = getActiveItem();
+    if (!active) return;
+
+    active.x = clamp(parseFloat(posX.value || '0'), -0.5, 0.5);
+    active.y = clamp(parseFloat(posY.value || '0'), -0.5, 0.5);
+    active.scale = clamp(parseFloat(scale.value || '1'), 0.1, 2);
+    active.rotation = ((parseFloat(rotation.value || '0') % 360) + 360) % 360;
+
+    scaleValue.textContent = Number(active.scale).toFixed(2);
+    renderAll();
+  }
+
+  // ===== Upload list (Layers sidebar) =====
+  function renderLayersPanel() {
+    /**
+     * Rebuild layers sidebar with all items
+     * Show thumbnails, active indicator, and action buttons
+     */
+    uploadedImagesList.innerHTML = '';
+
+    designState.items
+      .sort((a, b) => a.zIndex - b.zIndex)
+      .forEach((item, idx) => {
+        const div = document.createElement('div');
+        div.className = 'item';
+        const isActive = item.id === designState.activeItemId;
+        
+        if (isActive) {
+          div.style.borderColor = 'var(--primary)';
+          div.style.background = '#f8f7ff';
+        }
+
+        div.innerHTML = `
+          <img src="${item.src}" alt="">
+          <span>${item.src.split('/').pop().substring(0, 12)}</span>
+          <button class="del" data-id="${item.id}" title="حذف">×</button>
+        `;
+
+        div.addEventListener('click', (e) => {
+          if (!e.target.classList.contains('del')) {
+            selectItem(item.id);
+          }
+        });
+
+        div.querySelector('.del').addEventListener('click', (e) => {
+          e.stopPropagation();
+          deleteItem(item.id);
+        });
+
+        uploadedImagesList.appendChild(div);
+      });
+  }
+
+  function selectItem(id) {
+    /**
+     * Set item as active
+     * Update UI controls to reflect its state
+     */
+    const item = getItemById(id);
+    if (!item) return;
+
+    designState.activeItemId = id;
+    syncUIFromActiveItem();
+    renderLayersPanel();
+    renderAll();
+  }
+
+  function deleteItem(id) {
+    /**
+     * Remove item from items array
+     * If it was active, select first remaining item or set to null
+     */
+    const idx = designState.items.findIndex(i => i.id === id);
+    if (idx === -1) return;
+
+    designState.items.splice(idx, 1);
+
+    // Re-assign zIndex to remaining items
+    designState.items.forEach((item, i) => {
+      item.zIndex = i;
+    });
+
+    // Update active item
+    if (designState.activeItemId === id) {
+      designState.activeItemId = designState.items.length > 0 ? designState.items[0].id : null;
+    }
+
+    syncUIFromActiveItem();
+    renderLayersPanel();
+    renderAll();
+  }
+
+  function moveLayerUp(id) {
+    /**
+     * Increase zIndex of item
+     * Swap with the item above it
+     */
+    const item = getItemById(id);
+    if (!item || item.zIndex >= designState.items.length - 1) return;
+
+    const other = designState.items.find(i => i.zIndex === item.zIndex + 1);
+    if (other) {
+      other.zIndex--;
+      item.zIndex++;
+    }
+
+    renderLayersPanel();
+    renderAll();
+  }
+
+  function moveLayerDown(id) {
+    /**
+     * Decrease zIndex of item
+     * Swap with the item below it
+     */
+    const item = getItemById(id);
+    if (!item || item.zIndex <= 0) return;
+
+    const other = designState.items.find(i => i.zIndex === item.zIndex - 1);
+    if (other) {
+      other.zIndex++;
+      item.zIndex--;
+    }
+
+    renderLayersPanel();
+    renderAll();
+  }
+
+  function addUploadedImage(imageData) {
+    /**
+     * Legacy: called from file upload handler
+     * Creates item, adds to state, renders UI
+     */
+    const item = createItem(imageData.src, imageData.image);
+    designState.items.push(item);
+    designState.activeItemId = item.id;
+
+    syncUIFromActiveItem();
+    renderLayersPanel();
+    renderAll();
+  }
+
+  function setActiveImage(src) {
+    /**
+     * DEPRECATED: replaced by item-based system
+     * Kept for upload handler compatibility
+     */
+    const img = new Image();
+    img.onload = () => {
+      // Create a temporary imageData and use addUploadedImage
+      const imageData = { src: src, image: img, id: Date.now(), name: src };
+      addUploadedImage(imageData);
+    };
+    img.src = src;
+  }
+
+  // ===== Drag on UV (Stage 5: Only active item) =====
+  const drag = {
+    isDown: false,
+    startX: 0,
+    startY: 0,
+    startStateX: 0,
+    startStateY: 0
+  };
+
+  function getPointerInStage(e) {
+    const r = uvStage.getBoundingClientRect();
+    return {
+      x: e.clientX - r.left,
+      y: e.clientY - r.top,
+      w: r.width,
+      h: r.height
+    };
+  }
+
+  uvCanvas.addEventListener('pointerdown', (e) => {
+    const active = getActiveItem();
+    if (!active) return;
+    
+    drag.isDown = true;
+
+    const p = getPointerInStage(e);
+    drag.startX = p.x;
+    drag.startY = p.y;
+    drag.startStateX = active.x;
+    drag.startStateY = active.y;
+
+    uvCanvas.setPointerCapture(e.pointerId);
+  });
+
+  uvCanvas.addEventListener('pointermove', (e) => {
+    if (!drag.isDown) return;
+    
+    const active = getActiveItem();
+    if (!active) return;
+
+    const p = getPointerInStage(e);
+
+    // delta px -> delta norm
+    const dxNorm = (p.x - drag.startX) / p.w;
+    const dyNorm = (p.y - drag.startY) / p.h;
+
+    // y در state رو برعکس می‌کنیم
+    active.x = clamp(drag.startStateX + dxNorm, -0.5, 0.5);
+    active.y = clamp(drag.startStateY - dyNorm, -0.5, 0.5);
+
+    syncUIFromActiveItem();
+    renderAll();
+  });
+
+  function endDrag(e) {
+    drag.isDown = false;
+    try { uvCanvas.releasePointerCapture(e.pointerId); } catch {}
+  }
+  uvCanvas.addEventListener('pointerup', endDrag);
+  uvCanvas.addEventListener('pointercancel', endDrag);
+
+  // ===== Events =====
+  window.addEventListener('resize', onResize);
+
+  uploadBtn.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    if (!file || !file.type.startsWith('image/')) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const imageData = {
+          id: Date.now(),
+          src: e.target.result,
+          image: img,
+          name: file.name
+        };
+        uploadedImages.push(imageData);
+        addUploadedImage(imageData);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+
+    fileInput.value = '';
+  });
+
+  posX.addEventListener('input', syncActiveItemFromUI);
+  posY.addEventListener('input', syncActiveItemFromUI);
+  scale.addEventListener('input', syncActiveItemFromUI);
+  rotation.addEventListener('input', syncActiveItemFromUI);
+
+  // Export button (placeholder for future implementation)
+  exportBtn.addEventListener('click', () => {
+    alert('Export dieline feature coming soon');
+  });
+
+  resetBtn.addEventListener('click', () => {
+    /**
+     * Reset: clear all items and rebuild
+     */
+    designState.items = [];
+    designState.activeItemId = null;
+    fillTextureBackground();
+    canvasTexture.needsUpdate = true;
+    syncUIFromActiveItem();
+    renderLayersPanel();
+    renderAll();
+  });
+
+  // ===== Save Design (Stage 4) =====
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
+  saveBtn.addEventListener('click', async () => {
+    if (designState.items.length === 0) {
+      alert('Please upload at least one design element.');
+      return;
+    }
+
+    // Lock button to prevent multiple clicks
+    saveBtn.disabled = true;
+    const originalText = saveBtn.textContent;
+    saveBtn.textContent = 'Saving...';
+
+    try {
+      // Get DataURL from textureCanvas (final output)
+      const previewPng = textureCanvas.toDataURL('image/png');
+
+      // Build design_data with full items structure
+      const designData = {
+        version: 1,
+        items: designState.items.map(item => ({
+          src: item.src,
+          x: item.x,
+          y: item.y,
+          scale: item.scale,
+          rotation: item.rotation,
+          opacity: item.opacity,
+          zIndex: item.zIndex
+        })),
+        uvSize: TEX_SIZE
+      };
+
+      // Send to API
+      const response = await fetch('/mydesign/save/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+          design_data: designData,
+          preview_png: previewPng,
+          product_id: null,
+          design_id: designState.designId
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Save failed');
+      }
+
+      const result = await response.json();
+
+      if (result.ok) {
+        alert('Design saved successfully!');
+        // Redirect to result page
+        window.location.href = `/mydesign/result/${result.design_id}/`;
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert(`Error: ${error.message}`);
+      saveBtn.disabled = false;
+      saveBtn.textContent = originalText;
+    }
+  });
+
+  // ===== Start =====
+  uvImg.addEventListener('load', () => {
+    resizeUvCanvasToStage();
+    renderAll();
+  });
+  if (uvImg.complete) {
+    resizeUvCanvasToStage();
+    renderAll();
+  }
+
+  initThree();
+  syncUIFromActiveItem();
+  renderLayersPanel();
+  
+  // Ensure UV canvas is sized correctly after layout initialization
+  setTimeout(() => {
+    resizeUvCanvasToStage();
+  }, 100);
+  
+  // Stage 5.2: Load design if in edit mode
+  if (designState.designId) {
+    loadSavedDesign();
+  }
+</script>
+
+</body>
+</html>

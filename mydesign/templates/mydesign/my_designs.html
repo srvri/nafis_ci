@@ -1,0 +1,64 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>طرح‌های من</title>
+  <link rel="stylesheet" href="{% static 'mydesign/css/3ddesign.css' %}">
+  <style>
+    /* Minimal, modern layout using 3ddesign palette */
+    body { background: var(--bg-main); color: var(--brand-ink); font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial; margin: 0; }
+    .wrap { max-width: 980px; margin: 28px auto; padding: 20px; }
+    h1 { margin: 0 0 20px 0; font-size: 20px; color: var(--brand-green); font-weight: 800; text-align: center; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+    .card { background: #fff; border-radius: 12px; border: 1px solid var(--border2); box-shadow: 0 6px 18px rgba(2,6,23,0.06); overflow: hidden; display:flex; flex-direction:column; }
+    .thumb { aspect-ratio: 1/1; background: var(--bg-soft); display:flex; align-items:center; justify-content:center; }
+    .thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+    .card-body { padding: 12px; display:flex; gap:8px; align-items:center; justify-content:space-between; }
+    .id { font-weight:700; color:var(--brand-muted); }
+    .actions a { background: var(--primary); color: #fff; padding:8px 10px; border-radius: 8px; text-decoration:none; font-weight:700; }
+    .empty { text-align:center; color:var(--brand-muted); padding:40px 0; }
+    @media (max-width:600px){ .wrap{ padding:12px } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>طرح‌های من</h1>
+
+    {% if authenticated %}
+      <div id="designs" class="grid"></div>
+      <div id="empty" class="empty" style="display:none;">هنوز طرحی ذخیره نشده.</div>
+    {% else %}
+      <div class="empty">برای مشاهده طرح‌ها لطفاً وارد شوید. <a href="{% url 'accounts:login' %}" style="margin-right:8px; background:var(--primary); color:#fff; padding:8px 10px; border-radius:8px; text-decoration:none;">ورود</a></div>
+    {% endif %}
+  </div>
+
+  <script>
+    async function load() {
+      const grid = document.getElementById('designs');
+      const empty = document.getElementById('empty');
+      try {
+        const res = await fetch('/mydesign/api/designs/');
+        if (!res.ok) throw new Error('خطا در دریافت');
+        const data = await res.json();
+        if (!data.ok || !Array.isArray(data.designs)) throw new Error('فرمت نامعتبر');
+        if (data.designs.length === 0) { empty.style.display = 'block'; return; }
+        data.designs.forEach(d => {
+          const card = document.createElement('div'); card.className = 'card';
+          const thumb = document.createElement('div'); thumb.className = 'thumb';
+          if (d.preview_url) { const img = document.createElement('img'); img.src = d.preview_url; thumb.appendChild(img); } else { thumb.textContent = 'بدون پیش‌نمایش'; thumb.style.color = 'var(--brand-muted)'; }
+          const body = document.createElement('div'); body.className = 'card-body';
+          const id = document.createElement('div'); id.className = 'id'; id.textContent = `#${d.id}`;
+          const actions = document.createElement('div'); actions.className = 'actions'; actions.innerHTML = `<a href="/mydesign/edit/${d.id}/">ویرایش</a>`;
+          body.appendChild(id); body.appendChild(actions);
+          card.appendChild(thumb); card.appendChild(body);
+          grid.appendChild(card);
+        });
+      } catch (e) { console.error(e); if(document.getElementById('empty')) document.getElementById('empty').textContent = 'خطا در بارگذاری'; }
+    }
+  window.__IS_AUTH = {% if authenticated %}true{% else %}false{% endif %};
+  document.addEventListener('DOMContentLoaded', () => { if (window.__IS_AUTH) load(); });
+  </script>
+</body>
+</html>

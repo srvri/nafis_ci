@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+    <section class="shopping-cart section-padding">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <h2 class="mb-5">سبد خرید</h2>
+                </div>
+
+                {% if cart_items %}
+                    <div class="col-lg-8 col-12">
+                        <div class="cart-items">
+                            {% for item in cart_items %}
+                                <div class="cart-item card mb-3">
+                                    <div class="row g-0">
+                                        <div class="col-md-3">
+                                            <a href="{% url 'nafis:apparel_detail' item.apparel.slug %}">
+                                                {% if item.apparel.main_image %}
+                                                    <img src="{{ item.apparel.main_image.url }}" class="img-fluid rounded-start" alt="{{ item.apparel.name }}" style="height: 150px; object-fit: cover;">
+                                                {% else %}
+                                                    <div class="bg-light d-flex align-items-center justify-content-center rounded-start" style="height: 150px;">
+                                                        <span class="text-muted">بدون تصویر</span>
+                                                    </div>
+                                                {% endif %}
+                                            </a>
+                                        </div>
+                                        <div class="col-md-9">
+                                            <div class="card-body">
+                                                <h5 class="card-title">
+                                                    <a href="{% url 'nafis:apparel_detail' item.apparel.slug %}" class="text-decoration-none">
+                                                        {{ item.apparel.name }}
+                                                    </a>
+                                                </h5>
+                                                
+                                                <!-- مشخصات محصول -->
+                                                <div class="product-specs mb-3">
+                                                    <small class="text-muted d-block">
+                                                        <strong>کد:</strong> {{ item.apparel.code }}
+                                                    </small>
+                                                    <small class="text-muted d-block">
+                                                        <strong>نوع:</strong> {{ item.apparel.product_type.name }}
+                                                    </small>
+                                                    <small class="text-muted d-block">
+                                                        <strong>رنگ:</strong> {{ item.color.name }}
+                                                    </small>
+                                                    <small class="text-muted d-block">
+                                                        <strong>سایز:</strong> {{ item.size.name }}
+                                                    </small>
+                                                    <small class="text-muted d-block">
+                                                        <strong>تعداد:</strong> {{ item.quantity }}
+                                                    </small>
+                                                </div>
+
+                                                <!-- قیمت -->
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div class="price-info">
+                                                        {% if item.apparel.has_discount %}
+                                                            <span class="text-muted text-decoration-line-through me-2">
+                                                                {{ item.apparel.price|floatformat:0 }} تومان
+                                                            </span>
+                                                            <span class="text-success fw-bold">
+                                                                {{ item.apparel.get_discounted_price|floatformat:0 }} تومان
+                                                            </span>
+                                                            <small class="d-block text-muted">
+                                                                جمع: {{ item.apparel.get_discounted_price|floatformat:0|add:"0"|mul:item.quantity }} تومان
+                                                            </small>
+                                                        {% else %}
+                                                            <span class="text-primary fw-bold">
+                                                                {{ item.apparel.price|floatformat:0 }} تومان
+                                                            </span>
+                                                            <small class="d-block text-muted">
+                                                                جمع: {% widthratio item.apparel.price item.quantity item.quantity %} تومان
+                                                            </small>
+                                                        {% endif %}
+                                                    </div>
+                                                    
+                                                    <!-- دکمه حذف -->
+                                                    <a href="{% url 'nafis:remove_from_cart' item.id %}" 
+                                                       class="btn btn-outline-danger btn-sm"
+                                                       onclick="return confirm('آیا از حذف این محصول اطمینان دارید؟')">
+                                                        <i class="fas fa-trash"></i> حذف
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- خلاصه سبد خرید -->
+                    <div class="col-lg-4 col-12">
+                        <div class="cart-summary card">
+                            <div class="card-header">
+                                <h5 class="mb-0">خلاصه سبد خرید</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="summary-row d-flex justify-content-between mb-3">
+                                    <span>تعداد اقلام:</span>
+                                    <span>{{ cart_items|length }} مورد</span>
+                                </div>
+                                
+                                <div class="summary-row d-flex justify-content-between mb-3">
+                                    <span>مجموع کل:</span>
+                                    <span class="fw-bold text-primary">{{ total_price|floatformat:0 }} تومان</span>
+                                </div>
+                                
+                                <hr>
+                                
+                                <div class="d-grid gap-2">
+                                    <a href="{% url 'nafis:checkout' %}" class="btn btn-success btn-lg">
+                                        <i class="fas fa-shopping-bag"></i> ادامه خرید
+                                    </a>
+                                    <a href="{% url 'nafis:products' %}" class="btn btn-outline-primary">
+                                        <i class="fas fa-arrow-left"></i> ادامه خرید
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                {% else %}
+                    <!-- سبد خرید خالی -->
+                    <div class="col-12">
+                        <div class="empty-cart text-center">
+                            <div class="empty-cart-icon mb-4">
+                                <i class="fas fa-shopping-cart" style="font-size: 4rem; color: #ccc;"></i>
+                            </div>
+                            <h3 class="mb-3">سبد خرید شما خالی است</h3>
+                            <p class="text-muted mb-4">
+                                هنوز هیچ محصولی به سبد خرید اضافه نکرده‌اید. 
+                                برای مشاهده محصولات به فروشگاه مراجعه کنید.
+                            </p>
+                            <a href="{% url 'nafis:products' %}" class="btn btn-primary btn-lg">
+                                <i class="fas fa-shopping-bag"></i> مشاهده محصولات
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+{% endblock content %}

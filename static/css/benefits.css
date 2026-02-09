@@ -1,0 +1,43 @@
+/* static/css/benefits.css */
+
+/*---------------------------------------
+  BENEFITS SECTION
+-----------------------------------------*/
+.benefits-section {
+    background: var(--white-color);
+    position: relative;
+}
+
+.benefit-item {
+    padding: 20px;
+    text-align: center; /* Ensure content is centered */
+}
+
+.benefit-icon-wrapper {
+    width: 60px;
+    height: 60px;
+    background: #FEE7E7; /* Light pink background */
+    border-radius: 50%; /* Circle shape */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 15px; /* Auto margins for horizontal centering */
+}
+
+.benefit-icon {
+    width: 30px;
+    height: 30px;
+}
+
+.benefit-title {
+    font-size: 18px;
+    font-weight: var(--font-weight-normal);
+    color: var(--dark-color);
+    margin-bottom: 10px;
+}
+
+.benefit-description {
+    font-size: 14px;
+    color: var(--p-color); /* Grey color */
+    line-height: 1.6;
+}

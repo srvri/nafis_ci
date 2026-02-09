@@ -1,0 +1,46 @@
+<!-- checkout.html -->
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+    <section class="checkout section-padding">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <h2 class="mb-5">ادامه فرایند خرید</h2>
+                </div>
+                {% if cart_items %}
+                    {% for item in cart_items %}
+                        <div class="col-lg-4 col-12 mb-3">
+                            <div class="product-thumb">
+                                <a href="{% url 'nafis:apparel_detail' item.apparel.id %}">
+                                    <img src="{{ item.apparel.main_image.url }}" class="img-fluid product-image" alt="{{ item.apparel.name }}">
+                                </a>
+                                <div class="product-info d-flex">
+                                    <div>
+                                        <h5 class="product-title mb-0">
+                                            <a href="{% url 'nafis:apparel_detail' item.apparel.id %}" class="product-title-link">{{ item.apparel.name }}</a>
+                                        </h5>
+                                        <p class="product-p">تعداد: {{ item.quantity }}</p>
+                                    </div>
+                                    <small class="product-price text-muted ms-auto mt-auto mb-5">{{ item.apparel.price }} تومان</small>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                    <div class="col-12 mt-4">
+                        <h3>جمع کل: {{ total_price }} تومان</h3>
+                        <form method="post" action="{% url 'nafis:place_order' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn custom-btn cart-btn">ثبت سفارش</button>
+                        </form>
+                    </div>
+                {% else %}
+                    <div class="col-12">
+                        <p>سبد خرید شما خالی است.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+{% endblock content %}

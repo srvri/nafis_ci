@@ -1,0 +1,109 @@
+/* static/css/responsive.css */
+
+/*---------------------------------------
+  RESPONSIVE STYLES
+-----------------------------------------*/
+
+/* Large Desktops */
+@media screen and (max-width: 1200px) {
+  h1 {
+    font-size: 62px;
+  }
+}
+
+/* Tablets and Small Desktops */
+@media screen and (max-width: 991px) {
+  h1 {
+    font-size: 42px;
+    margin-bottom: 0;
+  }
+  h2 {
+    font-size: 36px;
+  }
+  h3 {
+    font-size: 32px;
+  }
+  h4 {
+    font-size: 28px;
+  }
+  h5 {
+    font-size: 24px;
+  }
+  h6 {
+    font-size: 20px;
+  }
+  .lead {
+    font-size: 16px;
+  }
+
+  /* Responsive Navbar */
+  .navbar-expand-lg .navbar-nav .nav-link {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    margin: 0;
+  }
+  .navbar-nav {
+    padding-top: 1rem;
+  }
+
+  /* General Padding */
+  .site-header.section-padding,
+  .section-padding {
+    padding-top: 4rem;
+    padding-bottom: 4rem;
+  }
+
+  /* Inner Page Header */
+  .header-image {
+    position: relative;
+    width: 100%;
+    height: auto;
+    margin-top: 2rem;
+  }
+
+  /* Modal Styles */
+  .modal-header {
+    padding-top: 6rem;
+    padding-bottom: 2rem;
+  }
+  .modal-body {
+    padding: 2rem;
+  }
+  #cart-modal .modal-body {
+    padding: 4rem 2rem 2rem 2rem;
+  }
+  #cart-modal .modal-footer {
+    padding: 2rem;
+  }
+  #cart-modal .modal-header .btn-close {
+    margin: 22px 14px;
+  }
+
+  /* Custom Buttons */
+  .custom-btn {
+    font-size: 14px;
+    padding: 13.5px 20px;
+  }
+}
+
+/* Mobile Devices */
+@media screen and (max-width: 768px) {
+    /* Responsive Benefits Section */
+    .benefit-item {
+        padding: 15px;
+    }
+    .benefit-icon-wrapper {
+        width: 50px;
+        height: 50px;
+    }
+    .benefit-icon {
+        width: 25px;
+        height: 25px;
+    }
+    .benefit-title {
+        font-size: 16px;
+    }
+    .benefit-description {
+        font-size: 12px;
+    }
+}

@@ -1,0 +1,41 @@
+
+/*style.css*/
+.navigation-card {
+  display: flex;
+  justify-content: space-around; /* فاصله بین آیکون‌ها را تنظیم می‌کند */
+  align-items: center;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 47px;
+  height: 47px;
+  overflow: hidden;
+  background-color: rgb(252, 252, 252);
+  padding: 15px;
+  border-radius: 50%;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.3s;
+}
+
+.tab:hover {
+  background-color: rgba(253, 103, 46, 0.31);
+}
+
+/* استایل‌های واکنش‌گرا */
+@media (max-width: 600px) {
+  .navigation-card {
+    flex-direction: row; /* اطمینان از چیدمان افقی در صفحه‌های کوچک */
+    gap: 15px;
+    padding: 10px 15px;
+  }
+
+  .tab {
+    width: 40px;
+    height: 40px;
+    padding: 10px;
+  }
+}

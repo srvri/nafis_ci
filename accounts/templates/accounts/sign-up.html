@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="auth-section" style="min-height: 100vh; display: flex; justify-content: center; align-items: center; animation: gradientBackground 20s cubic-bezier(0.4, 0, 0.2, 1) infinite;">
+    <div class="login-form">
+        <h2 class="form-heading">ثبت‌ نام</h2>
+        <form method="post">
+            {% csrf_token %}
+            <div class="input-group">
+                <input type="text" id="id_phone_number" name="phone_number" placeholder="شماره تلفن همراه" required>
+                <label class="label" for="id_phone_number"></label>
+            </div>
+            <div class="input-group">
+                <input type="password" id="id_password" name="password" placeholder="رمز عبور" required>
+                <label class="label" for="id_password"></label>
+            </div>
+            {% if messages %}
+                <ul class="messages">
+                    {% for message in messages %}
+                        <li class="alert {% if message.tags %}{{ message.tags }}{% endif %}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+            <button type="submit" class="submit">ثبت‌نام</button>
+        </form>
+        <div class="signup-link">
+            اکانت دارید؟ <a href="{% url 'accounts:login' %}">وارد شوید</a>
+        </div>
+        <div class="signup-link">
+            ثبت‌نام با ایمیل؟ <a href="{% url 'accounts:signup_email' %}">اینجا کلیک کنید</a>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="{% static 'css/READYSTYLE2.css' %}">
+<style>
+/* تنظیمات اضافی برای RTL و فونت فارسی */
+body {
+    font-family: 'Vazir', sans-serif;
+    direction: rtl;
+    text-align: right;
+}
+.login-form {
+    text-align: right;
+}
+.input-group input {
+    direction: rtl;
+    text-align: right;
+}
+.input-group .label {
+    left: auto;
+    right: 12px;
+}
+</style>
+{% endblock content %}

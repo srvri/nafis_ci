@@ -1,0 +1,148 @@
+/* static/css/components.css */
+
+/*---------------------------------------
+  CUSTOM BUTTON & ICON
+-----------------------------------------*/
+.custom-btn {
+  background: var(--dark-color);
+  border-radius: 50px;
+  color: var(--white-color);
+  font-size: var(--copyright-text-font-size);
+  text-transform: uppercase;
+  padding: 16.50px 20px;
+  border: none;
+}
+
+.custom-btn:hover {
+  background: var(--primary-color);
+  color: var(--white-color);
+}
+
+.social-btn {
+  background: transparent;
+  border: 1px solid var(--grey-color);
+  color: var(--dark-color);
+  text-transform: none;
+}
+
+.social-btn:hover {
+  background: var(--dark-color);
+  color: var(--white-color);
+  border-color: transparent;
+}
+
+.cart-form-select {
+  border-radius: 0;
+  padding-top: 15px;
+  padding-bottom: 15px;
+}
+
+.cart-btn {
+  border-radius: 0;
+  width: 100%;
+  font-size: var(--product-link-font-size);
+}
+
+.custom-icon {
+  color: var(--p-color);
+  font-size: 24px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.bi-bag.custom-icon {
+  font-size: 17px;
+}
+
+/*---------------------------------------
+  DIV SEPARATOR
+-----------------------------------------*/
+.div-separator {
+  position: relative;
+  width: 100%;
+  margin: 2rem 0;
+}
+
+.div-separator::before {
+  content: "";
+  height: 1px;
+  background: var(--grey-color);
+  display: block;
+  width: 100%;
+}
+
+.div-separator span {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  background: var(--white-color);
+  color: var(--dark-color);
+  font-weight: var(--font-weight-bold);
+  font-size: 14px;
+  padding: 0 10px;
+  text-transform: uppercase;
+}
+
+/*---------------------------------------
+  CONTACT FORM
+-----------------------------------------*/
+.contact-form .form-control {
+  border-color: var(--grey-color);
+  font-weight: var(--font-weight-normal);
+}
+
+.form-floating>label {
+  color: var(--grey-color);
+  font-weight: var(--font-weight-normal);
+}
+
+.contact-form button[type='submit'] {
+  background: var(--dark-color);
+  border: none;
+  border-radius: 100px;
+  color: var(--white-color);
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  padding: 16px;
+  width: 100%; /* Make button full width */
+}
+
+.contact-form button[type='submit']:hover {
+  background: var(--primary-color);
+}
+
+/*---------------------------------------
+  MODAL (Popup)
+-----------------------------------------*/
+.modal-body {
+  padding: 4rem;
+}
+
+.modal-header {
+  padding-top: 7rem;
+  padding-bottom: 5rem;
+  border-bottom: none;
+}
+
+.modal-header .btn-close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: 24px;
+  margin: 32px;
+  z-index: 2;
+}
+
+#cart-modal .modal-header .btn-close {
+  margin: 22px;
+}
+
+#cart-modal .modal-header {
+  padding: 0;
+}
+
+#cart-modal .modal-footer {
+  padding: 2rem 4rem;
+}

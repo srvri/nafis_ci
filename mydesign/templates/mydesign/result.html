@@ -1,0 +1,178 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>نتیجه طراحی</title>
+  <link rel="stylesheet" href="{% static 'mydesign/css/3ddesign.css' %}">
+  <style>
+    body { background: var(--bg-main); color: var(--brand-ink); font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial; margin:0; }
+    .wrap { max-width:760px; margin:28px auto; padding:20px; }
+    h1 { color:var(--brand-green); font-weight:800; font-size:20px; text-align:center; margin-bottom:18px; }
+    .card { background:#fff; border:1px solid var(--border2); border-radius:12px; padding:18px; box-shadow:0 6px 20px rgba(2,6,23,0.06); }
+    .preview { display:flex; flex-direction:column; align-items:center; gap:12px; }
+    .preview img { width:100%; max-width:360px; border-radius:10px; border:1px solid var(--border2); background:var(--bg-soft); }
+    .preview { display:grid; grid-template-columns: 1fr 380px; gap:18px; align-items:start; }
+    .image-area { display:flex; align-items:center; justify-content:center; }
+    .image-area img { width:100%; max-width:360px; border-radius:10px; border:1px solid var(--border2); background:var(--bg-soft); }
+    #viewer3d { width:100%; height:320px; border-radius:10px; border:1px solid var(--border2); background:var(--bg-soft); overflow:hidden; }
+    #viewer3d .loading { display:flex; height:100%; align-items:center; justify-content:center; color:var(--brand-muted); }
+    .meta { color:var(--brand-muted); text-align:center; font-size:0.95rem; }
+    .actions { display:flex; gap:10px; justify-content:center; margin-top:12px; }
+    .btn { background:var(--primary); color:#fff; padding:10px 14px; border-radius:10px; text-decoration:none; font-weight:700; }
+    @media (max-width:600px){ .wrap{ padding:12px } .preview img{ max-width:100%; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>نتیجه طراحی</h1>
+    <div class="card">
+      <div class="preview">
+        {% if design.preview_image %}
+            <div class="image-area">
+              <img src="{{ design.preview_image.url }}" alt="preview">
+        {% else %}
+          <div class="meta">پیش‌نمایش موجود نیست</div>
+        {% endif %}
+            </div>
+            <div id="viewer3d"><div class="loading">در حال بارگذاری مدل...</div></div>
+        <div class="meta">
+          شناسه: #{{ design.id }} • ساخته شده: {{ design.created_at|date:"Y-m-d H:i" }} • بروزرسانی: {{ design.updated_at|date:"Y-m-d H:i" }}
+        </div>
+        <div class="actions">
+          <a class="btn" href="{% url 'mydesign:edit_design_page' design.id %}">ویرایش</a>
+          <a class="btn" href="{% url 'mydesign:mockup_page' %}">طراحی جدید</a>
+          <a class="btn" href="javascript:history.back()">بازگشت</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+    <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.164.1/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.164.1/examples/jsm/"
+      }
+    }
+    </script>
+
+    <script type="module">
+      import * as THREE from 'three';
+      import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+      import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+      const modelUrl = "{{ model_glb_url|default:''|escapejs }}";
+      let textureUrl = "{{ texture_png_url|default:''|escapejs }}";
+      if (!textureUrl) {
+        textureUrl = "{% if design.preview_image %}{{ design.preview_image.url|escapejs }}{% else %}{% endif %}";
+      }
+
+      const viewer = document.getElementById('viewer3d');
+      const loadingEl = viewer.querySelector('.loading');
+
+      if (!modelUrl) {
+        // No model: hide viewer
+        if (viewer) viewer.style.display = 'none';
+      } else {
+        let scene, camera, renderer, controls;
+
+        function init() {
+          scene = new THREE.Scene();
+          scene.background = new THREE.Color(0xf4f4f7);
+
+          camera = new THREE.PerspectiveCamera(45, viewer.clientWidth / viewer.clientHeight, 0.1, 100);
+          camera.position.set(0, 0.35, 1.9);
+
+          renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+          renderer.setSize(viewer.clientWidth, viewer.clientHeight);
+          renderer.setPixelRatio(window.devicePixelRatio);
+          renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+          // clear viewer and append canvas
+          viewer.innerHTML = '';
+          viewer.appendChild(renderer.domElement);
+
+          const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 1.0);
+          hemi.position.set(0, 1, 0);
+          scene.add(hemi);
+
+          const key = new THREE.DirectionalLight(0xffffff, 1.0);
+          key.position.set(2, 2, 3);
+          scene.add(key);
+
+          controls = new OrbitControls(camera, renderer.domElement);
+          controls.enableDamping = true;
+          controls.minDistance = 0.6;
+          controls.maxDistance = 4;
+
+          loadModel();
+          animate();
+          window.addEventListener('resize', onResize);
+        }
+
+        function onResize() {
+          if (!viewer || !camera || !renderer) return;
+          camera.aspect = viewer.clientWidth / viewer.clientHeight;
+          camera.updateProjectionMatrix();
+          renderer.setSize(viewer.clientWidth, viewer.clientHeight);
+        }
+
+        function applyTextureToAllMeshes(root, tex) {
+          root.traverse((child) => {
+            if (!child.isMesh) return;
+            const apply = (m) => {
+              if (!m) return;
+              if (m.isMeshStandardMaterial || m.isMeshPhysicalMaterial) {
+                m.metalness = 0.0;
+                m.roughness = 0.9;
+                m.envMapIntensity = 1.0;
+              }
+              m.map = tex;
+              m.needsUpdate = true;
+            };
+            if (Array.isArray(child.material)) child.material.forEach(apply);
+            else apply(child.material);
+          });
+        }
+
+        function loadModel() {
+          const loader = new GLTFLoader();
+          loader.load(modelUrl, (gltf) => {
+            const model = gltf.scene;
+            model.position.y = -1.35;
+            scene.add(model);
+
+            if (textureUrl) {
+              const texLoader = new THREE.TextureLoader();
+              texLoader.load(textureUrl, (tex) => {
+                tex.flipY = false;
+                tex.colorSpace = THREE.SRGBColorSpace;
+                applyTextureToAllMeshes(model, tex);
+                if (loadingEl) loadingEl.remove();
+              }, undefined, (err) => {
+                console.error('Texture load error', err);
+                if (loadingEl) loadingEl.remove();
+              });
+            } else {
+              if (loadingEl) loadingEl.remove();
+            }
+
+          }, undefined, (err) => {
+            console.error('Model load error', err);
+            if (viewer) viewer.innerHTML = '<div style="padding:12px;color:var(--brand-muted)">خطا در بارگذاری مدل</div>';
+          });
+        }
+
+        function animate() {
+          requestAnimationFrame(animate);
+          if (controls) controls.update();
+          if (renderer && scene && camera) renderer.render(scene, camera);
+        }
+
+        init();
+      }
+    </script>
+</body>
+</html>

@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12 text-center section-padding pb-0">
+            <h2 class="mb-5">{{ category_name }}</h2>
+        </div>
+    </div>
+</div>
+
+<!-- این ساختار جدید جایگزین گرید قبلی می شود -->
+<div class="scrolling-wrapper">
+    <div class="card-track" id="card-track">
+        <!-- حلقه اول: نمایش همه محصولات -->
+        {% for apparel in apparels %}
+            <div class="product-card-glass-scroll">
+                <a href="{% url 'nafis:apparel_detail' apparel.slug %}">
+                    {% if apparel.main_image %}
+                        <img src="{{ apparel.main_image.url }}" class="product-image" alt="{{ apparel.name }}">
+                    {% else %}
+                        <div class="product-image bg-light d-flex align-items-center justify-content-center">
+                            <span class="text-muted small">بدون تصویر</span>
+                        </div>
+                    {% endif %}
+                </a>
+                <div class="product-info">
+                    <h5 class="product-title mb-2">
+                        <a href="{% url 'nafis:apparel_detail' apparel.slug %}" class="product-title-link">{{ apparel.name }}</a>
+                    </h5>
+                    <div class="product-price mt-auto">
+                        {% if apparel.has_discount %}
+                            <span class="text-muted text-decoration-line-through me-2">{{ apparel.price|floatformat:0 }} تومان</span>
+                            <span class="text-success fw-bold">{{ apparel.get_discounted_price|floatformat:0 }} تومان</span>
+                        {% else %}
+                            <span class="text-primary fw-bold">{{ apparel.price|floatformat:0 }} تومان</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+
+        <!-- حلقه دوم: کپی محصولات برای ایجاد افکت بی نهایت -->
+        {% for apparel in apparels %}
+            <div class="product-card-glass-scroll">
+                <a href="{% url 'nafis:apparel_detail' apparel.slug %}">
+                    {% if apparel.main_image %}
+                        <img src="{{ apparel.main_image.url }}" class="product-image" alt="{{ apparel.name }}">
+                    {% else %}
+                        <div class="product-image bg-light d-flex align-items-center justify-content-center">
+                            <span class="text-muted small">بدون تصویر</span>
+                        </div>
+                    {% endif %}
+                </a>
+                <div class="product-info">
+                    <h5 class="product-title mb-2">
+                        <a href="{% url 'nafis:apparel_detail' apparel.slug %}" class="product-title-link">{{ apparel.name }}</a>
+                    </h5>
+                    <div class="product-price mt-auto">
+                        {% if apparel.has_discount %}
+                            <span class="text-muted text-decoration-line-through me-2">{{ apparel.price|floatformat:0 }} تومان</span>
+                            <span class="text-success fw-bold">{{ apparel.get_discounted_price|floatformat:0 }} تومان</span>
+                        {% else %}
+                            <span class="text-primary fw-bold">{{ apparel.price|floatformat:0 }} تومان</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- یک بخش جاوا اسکریپت کوچک برای تنظیم سرعت انیمیشن بر اساس تعداد کارت ها -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const track = document.getElementById('card-track');
+    const cards = track.querySelectorAll('.product-card-glass-scroll');
+    // چون محتوا دو برابر شده، تعداد واقعی نصف است
+    const realCardCount = cards.length / 2;
+    
+    // هر کارت حدود 310px عرض دارد (280 عرض + 30 مارجین)
+    // درخواست شما: حرکت یک کارت در 3 ثانیه
+    const animationDuration = realCardCount * 3; // محاسبه زمان کل انیمیشن
+
+    // تنظیم متغیر CSS برای زمان انیمیشن
+    track.style.animationDuration = animationDuration + 's';
+});
+</script>
+
+{% endblock content %}

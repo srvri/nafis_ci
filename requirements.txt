@@ -1,0 +1,29 @@
+# Django Framework
+django
+Pillow
+
+# Django REST Framework
+djangorestframework
+djangorestframework-simplejwt
+
+# PostgreSQL Driver
+psycopg2-binary
+
+# CORS Headers
+django-cors-headers
+
+# REST Authentication
+dj-rest-auth[with_social]
+
+# API Schema and Documentation
+drf-spectacular
+
+# MPTT for tree-like structures
+django-mptt
+
+# Production Web Server
+gunicorn
+whitenoise
+
+
+jdatetime

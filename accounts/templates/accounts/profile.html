@@ -1,0 +1,234 @@
+{% load static %}
+{% load jalali %}
+
+{% block content %}
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: {
+                    "primary": "#17cf54",
+                    "background-light": "#f6f8f6",
+                    "background-dark": "#112116",
+                    "orange-accent": "#ff9f1c",
+                },
+                fontFamily: {
+                    "display": ["Vazirmatn", "sans-serif"]
+                },
+            },
+        },
+    }
+</script>
+<style>
+    .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    body {
+        font-family: 'Vazirmatn', 'Vazir', sans-serif;
+        direction: rtl;
+        text-align: right;
+    }
+</style>
+
+<div class="relative flex h-auto min-h-screen w-full flex-col bg-background-light dark:bg-background-dark font-display">
+    <div class="layout-container flex h-full grow flex-row">
+        
+        <!-- ===== 1. SIDEBAR IS NOW HIDDEN ON MOBILE ===== -->
+        <!-- The 'hidden' class hides it by default, 'lg:flex' shows it on large screens -->
+        <aside class="hidden lg:flex w-1/4 bg-primary/20 dark:bg-primary/10 p-4">
+            <div class="flex flex-col gap-4 py-5">
+                <div class="flex gap-3 items-center">
+                    <div class="bg-yellow-200 rounded-full flex flex-shrink-0 justify-center items-center text-yellow-500 text-2xl font-mono size-12">
+                        {{ user.username|first|upper }}
+                    </div>
+                    <div class="flex flex-col">
+                        {% if user_profile.first_name or user_profile.last_name %}
+                            <h1 class="text-gray-900 dark:text-white text-base font-bold leading-normal">{{ user_profile.first_name }} {{ user_profile.last_name }}</h1>
+                            <p class="text-gray-600 dark:text-gray-400 text-sm font-normal leading-normal">{{ user_profile.phone_number|default:'شماره تلفن ثبت نشده' }}</p>
+                        {% else %}
+                            <h1 class="text-gray-900 dark:text-white text-base font-bold leading-normal">{{ user.username }}</h1>
+                            <p class="text-gray-600 dark:text-gray-400 text-sm font-normal leading-normal">{{ user_profile.phone_number|default:'شماره تلفن ثبت نشده' }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                <!-- Desktop Menu Links -->
+                <div class="flex flex-col gap-2 mt-8">
+                    <a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-orange-accent text-white" href="">
+                        <span class="material-symbols-outlined">person</span>
+                        <p class="text-sm font-medium leading-normal">حساب کاربری</p>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2 text-gray-900 dark:text-white rounded-lg hover:bg-primary/30" href="{% url 'accounts:notifications' %}">
+                        <span class="material-symbols-outlined">notifications</span>
+                        <p class="text-sm font-medium leading-normal">اعلان‌ها</p>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2 text-gray-900 dark:text-white rounded-lg hover:bg-primary/30" href="{% url 'accounts:change_password' %}">
+                        <span class="material-symbols-outlined">lock</span>
+                        <p class="text-sm font-medium leading-normal">تغییر رمز عبور</p>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2 text-gray-900 dark:text-white rounded-lg hover:bg-primary/30" href="{% url 'accounts:support' %}">
+                        <span class="material-symbols-outlined">mail</span>
+                        <p class="text-sm font-medium leading-normal">پشتیبانی</p>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2 text-gray-900 dark:text-white rounded-lg hover:bg-primary/30" href="{% url 'accounts:addresses' %}">
+                        <span class="material-symbols-outlined">location_on</span>
+                        <p class="text-sm font-medium leading-normal">آدرس‌ها</p>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2 text-gray-900 dark:text-white rounded-lg hover:bg-primary/30" href="{% url 'accounts:orders' %}">
+                        <span class="material-symbols-outlined">shopping_basket</span>
+                        <p class="text-sm font-medium leading-normal">تمام سفارشات</p>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2 text-gray-900 dark:text-white rounded-lg hover:bg-primary/30" href="{% url 'accounts:wishlist' %}">
+                        <span class="material-symbols-outlined">favorite</span>
+                        <p class="text-sm font-medium leading-normal">لیست علاقه‌مندی‌ها</p>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2 text-gray-900 dark:text-white rounded-lg hover:bg-primary/30 mt-8" href="{% url 'accounts:logout' %}">
+                        <span class="material-symbols-outlined">logout</span>
+                        <p class="text-sm font-medium leading-normal">خروج</p>
+                    </a>
+                </div>
+            </div>
+        </aside>
+
+        <main class="w-full lg:flex-1 px-6 lg:px-10 py-5">
+            <div class="layout-content-container flex flex-col max-w-4xl mx-auto">
+                <div class="flex flex-wrap justify-between gap-3 p-4">
+                    <h1 class="text-gray-900 dark:text-white text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em]">پروفایل</h1>
+                </div>
+
+                <!-- ===== 2. NEW ACCORDION MENU FOR MOBILE ===== -->
+                <!-- This whole block is hidden on large screens ('lg:hidden') -->
+                <div id="mobile-menu-container" class="lg:hidden w-full px-4 mb-6">
+                    <button id="accordion-button" class="w-full flex justify-between items-center p-4 bg-gray-100 dark:bg-gray-800 rounded-lg shadow">
+                        <span class="font-semibold text-gray-900 dark:text-white">منوی حساب کاربری</span>
+                        <span id="accordion-icon" class="material-symbols-outlined text-gray-900 dark:text-white transition-transform duration-300">expand_more</span>
+                    </button>
+                    <!-- Mobile Menu Links (a copy of the sidebar links) -->
+                    <div id="accordion-content" class="max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+                        <div class="flex flex-col gap-2 pt-4">
+                            <a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-orange-accent text-white" href="">
+                                <span class="material-symbols-outlined">person</span>
+                                <p class="text-sm font-medium leading-normal">حساب کاربری</p>
+                            </a>
+                            <a class="flex items-center gap-3 px-3 py-2 text-gray-900 dark:text-white rounded-lg hover:bg-primary/30" href="{% url 'accounts:notifications' %}">
+                                <span class="material-symbols-outlined">notifications</span>
+                                <p class="text-sm font-medium leading-normal">اعلان‌ها</p>
+                            </a>
+                            <a class="flex items-center gap-3 px-3 py-2 text-gray-900 dark:text-white rounded-lg hover:bg-primary/30" href="{% url 'accounts:change_password' %}">
+                                <span class="material-symbols-outlined">lock</span>
+                                <p class="text-sm font-medium leading-normal">تغییر رمز عبور</p>
+                            </a>
+                            <a class="flex items-center gap-3 px-3 py-2 text-gray-900 dark:text-white rounded-lg hover:bg-primary/30" href="{% url 'accounts:support' %}">
+                                <span class="material-symbols-outlined">mail</span>
+                                <p class="text-sm font-medium leading-normal">پشتیبانی</p>
+                            </a>
+                            <a class="flex items-center gap-3 px-3 py-2 text-gray-900 dark:text-white rounded-lg hover:bg-primary/30" href="{% url 'accounts:addresses' %}">
+                                <span class="material-symbols-outlined">location_on</span>
+                                <p class="text-sm font-medium leading-normal">آدرس‌ها</p>
+                            </a>
+                            <a class="flex items-center gap-3 px-3 py-2 text-gray-900 dark:text-white rounded-lg hover:bg-primary/30" href="{% url 'accounts:orders' %}">
+                                <span class="material-symbols-outlined">shopping_basket</span>
+                                <p class="text-sm font-medium leading-normal">تمام سفارشات</p>
+                            </a>
+                            <a class="flex items-center gap-3 px-3 py-2 text-gray-900 dark:text-white rounded-lg hover:bg-primary/30" href="{% url 'accounts:wishlist' %}">
+                                <span class="material-symbols-outlined">favorite</span>
+                                <p class="text-sm font-medium leading-normal">لیست علاقه‌مندی‌ها</p>
+                            </a>
+                            <a class="flex items-center gap-3 px-3 py-2 text-gray-900 dark:text-white rounded-lg hover:bg-primary/30 mt-4" href="{% url 'accounts:logout' %}">
+                                <span class="material-symbols-outlined">logout</span>
+                                <p class="text-sm font-medium leading-normal">خروج</p>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-4 space-y-8">
+                    <form method="post" class="space-y-8">
+                        {% csrf_token %}
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 md:pt-8">
+                            <!-- Form fields -->
+                            <label class="flex flex-col">
+                                <p class="text-gray-900 dark:text-white text-base font-medium leading-normal pb-2">نام</p>
+                                <input type="text" name="first_name" value="{{ user_profile.first_name|default:'' }}" class="form-input flex w-full min-w-0 flex-1 rounded-lg text-gray-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary border-gray-300 dark:border-gray-700 bg-white dark:bg-background-dark h-14 p-3.5 border"/>
+                            </label>
+                            <label class="flex flex-col">
+                                <p class="text-gray-900 dark:text-white text-base font-medium leading-normal pb-2">نام خانوادگی</p>
+                                <input type="text" name="last_name" value="{{ user_profile.last_name|default:'' }}" class="form-input flex w-full min-w-0 flex-1 rounded-lg text-gray-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary border-gray-300 dark:border-gray-700 bg-white dark:bg-background-dark h-14 p-3.5 border"/>
+                            </label>
+                            <label class="flex flex-col">
+                                <p class="text-gray-900 dark:text-white text-base font-medium leading-normal pb-2">شماره موبایل</p>
+                                <input type="tel" name="phone" value="{{ user_profile.phone_number|default:'' }}" class="form-input flex w-full min-w-0 flex-1 rounded-lg text-gray-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary border-gray-300 dark:border-gray-700 bg-white dark:bg-background-dark h-14 p-3.5 border"/>
+                            </label>
+                            <label class="flex flex-col">
+                                <p class="text-gray-900 dark:text-white text-base font-medium leading-normal pb-2">آدرس ایمیل</p>
+                                <input type="email" name="email" value="{{ user_profile.email|default:user.email }}" class="form-input flex w-full min-w-0 flex-1 rounded-lg text-gray-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary border-gray-300 dark:border-gray-700 bg-white dark:bg-background-dark h-14 p-3.5 border"/>
+                            </label>
+                            <label class="flex flex-col">
+                                <p class="text-gray-900 dark:text-white text-base font-medium leading-normal pb-2">تاریخ تولد (شمسی)</p>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <div>
+                                        <input type="text" id="birth_year" placeholder="سال" maxlength="4" class="form-input flex w-full rounded-lg text-gray-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary border-gray-300 dark:border-gray-700 bg-white dark:bg-background-dark h-14 p-3.5 border text-center" value="{% if user_profile.birth_date %}{{ user_profile.birth_date|to_jalali|slice:':4' }}{% endif %}"/>
+                                    </div>
+                                    <div>
+                                        <input type="text" id="birth_month" placeholder="ماه" maxlength="2" class="form-input flex w-full rounded-lg text-gray-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary border-gray-300 dark:border-gray-700 bg-white dark:bg-background-dark h-14 p-3.5 border text-center" value="{% if user_profile.birth_date %}{{ user_profile.birth_date|to_jalali|slice:'5:7' }}{% endif %}"/>
+                                    </div>
+                                    <div>
+                                        <input type="text" id="birth_day" placeholder="روز" maxlength="2" class="form-input flex w-full rounded-lg text-gray-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary border-gray-300 dark:border-gray-700 bg-white dark:bg-background-dark h-14 p-3.5 border text-center" value="{% if user_profile.birth_date %}{{ user_profile.birth_date|to_jalali|slice:'8:10' }}{% endif %}"/>
+                                    </div>
+                                </div>
+                                <input type="hidden" id="birth_date_hidden" name="birth_date" value="{% if user_profile.birth_date %}{{ user_profile.birth_date|date:'Y-m-d' }}{% endif %}"/>
+                                {% if user_profile.birth_date %}
+                                <small class="text-gray-500 dark:text-gray-400 mt-1">تاریخ میلادی: {{ user_profile.birth_date|date:'Y-m-d' }}</small>
+                                {% endif %}
+                            </label>
+                            <div class="flex flex-col">
+                                <p class="text-gray-900 dark:text-white text-base font-medium leading-normal pb-2">جنسیت</p>
+                                <div class="flex items-center gap-6 h-14">
+                                    <label class="flex items-center gap-2">
+                                        <input type="radio" name="gender" value="F" {% if user_profile.gender == 'female' %}checked{% endif %} class="form-radio text-primary focus:ring-primary"/>
+                                        <span class="text-gray-900 dark:text-white">زن</span>
+                                    </label>
+                                    <label class="flex items-center gap-2">
+                                        <input type="radio" name="gender" value="M" {% if user_profile.gender == 'male' %}checked{% endif %} class="form-radio text-primary focus:ring-primary"/>
+                                        <span class="text-gray-900 dark:text-white">مرد</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex justify-start pt-4">
+                            <button type="submit" class="px-6 py-3 rounded-lg bg-orange-accent text-white font-semibold text-base hover:bg-orange-accent/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-accent">ذخیره تغییرات</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- ===== 3. JAVASCRIPT FOR ACCORDION ===== -->
+<script>
+    const accordionButton = document.getElementById('accordion-button');
+    const accordionContent = document.getElementById('accordion-content');
+    const accordionIcon = document.getElementById('accordion-icon');
+
+    accordionButton.addEventListener('click', () => {
+        // Toggle content visibility with smooth animation
+        if (accordionContent.style.maxHeight) {
+            accordionContent.style.maxHeight = null;
+        } else {
+            accordionContent.style.maxHeight = accordionContent.scrollHeight + "px";
+        }
+        
+        // Rotate icon
+        accordionIcon.classList.toggle('rotate-180');
+    });
+</script>
+
+<link rel="stylesheet" href="{% static 'css/READYSTYLE2.css' %}">
+<script src="{% static 'js/jalali-converter.js' %}"></script>
+{% endblock content %}
